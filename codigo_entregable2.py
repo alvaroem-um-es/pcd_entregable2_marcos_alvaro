@@ -1,3 +1,3 @@
 print("Hola")
 
-x = 7
+x = 7 + 3
