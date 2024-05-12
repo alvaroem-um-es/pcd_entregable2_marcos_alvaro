@@ -1,242 +1,275 @@
+# -------------------------------------------------------------- #
+#  Copyright (c) UMU Corporation. All rights reserved.
+# ######################## PROGRAMACIÓN ORIENTADA A OBJETOS ####################### #
+# ########################  ENTREGABLE 1  ####################### #
 
-# importacion de librerias necesarias
+
+#### IMPLEMENTACIÓN CÓDIGO PARA ENTORNO IoT SENSOR DE TEMPERATURA EN INVERNADERO ####
+
+# -------------------------------------------------------------- #
+
+#### CLASES PARA LAS EXCEPCIONES  ####
+
+
+
 from abc import ABC, abstractmethod
 import time
 import random
+import functools
 import numpy as np
 
 
-# R1: patron singleton
-class SistemaIoT:
-    _instancia = None
-    def __init__(self):
 
-        # asegurarse de que la inicializacion solo se realiza una vez
-        if not hasattr(self, 'inicializado'):
-            self.datos_temperatura = []  
-            self.inicializado = True  
+class ErrorEnTemperatura(Exception):
+    pass
 
-    @classmethod
-    def obtener_instancia(cls):
-        if cls._instancia is None:
-            cls._instancia = cls()
-        return cls._instancia
+class ErrorObservador(Exception):
+    pass
 
-    def recibir_temperatura(self, marca_temporal, temperatura):
-        try:
-            self.datos_temperatura.append((marca_temporal, temperatura))
-            self.manejar_nueva_temperatura(marca_temporal, temperatura)
-        except Exception as e:
-            print("Error al recibir temperatura:", e)
+class ErrorEstrategia(Exception):
+    pass
 
-    def manejar_nueva_temperatura(self, marca_temporal, temperatura):
-        try:
-            # verificar si la temperatura actual esta por encima del umbral
-            umbral = 35 
-            if temperatura > umbral:
-                print(f"Alerta: La temperatura ha superado el umbral de {umbral}°C. Temperatura actual: {temperatura}°C")
 
-            datos_recientes = list(filter(lambda x: marca_temporal - x[0] <= 30, self.datos_temperatura))
-            if datos_recientes and (max(datos_recientes, key=lambda x: x[1])[1] - min(datos_recientes, key=lambda x: x[1])[1] > 10):
-                print("Alerta: La temperatura ha aumentado más de 10 grados centígrados en los últimos 30 segundos.")
 
-        except Exception as e:
-            print("Error al manejar nueva temperatura:", e)
-            
-    def obtener_datos_singleton(self):
-        return self.datos_temperatura
 
-# R2: patron observer
-# clase observable (sujeto)
+
+# -------------------------------------------------------------- #
+
+#### CLASES PARA LOS OBJETOS Y LOS PATRONES DE DISEÑO PERTENECIENTES AL ENUNCIADO CON SUS MÉTODOS CORRESPONDIENTES ####
+
+# OBSERVER
+
 class Observable:
     def __init__(self):
-        self._observadores = []
+        self._observers = []
 
-    def registrar_observador(self, observador):
-        self._observadores.append(observador)
+    def registro(self, observer):
+        if not isinstance(observer,Observer) :
+            print("Sistema no es observador.")
+            raise ErrorObservador
+        self._observers.append(observer)
 
-    def remover_observador(self, observador):
-        if observador in self._observadores:
-            self._observadores.remove(observador)
+    def borrado(self, element):
+        if element not in self._observers :
+            print("Observador no registrado.")
+            raise ErrorObservador
+        self._observers.remove(element)
 
-    def notificar_observadores(self, datos):
-        for observador in self._observadores:
-            observador.actualizar(datos)
+    def notificacion(self, temperatura):
+        for element in self._observers:
+            element.actualizar(temperatura)
 
-# clase observador
-class Observador(ABC):
+class Observer(ABC):
     @abstractmethod
-    def actualizar(self, datos):
+    def actualizar(self, temperatura):
         pass
 
-# definicion del observador
-class SensorDeTemperatura(Observador):
-    def __init__(self, nombre):
-        self.nombre = nombre
 
-    def actualizar(self, datos):
-        try:
-            marca_temporal, temperatura = datos
-            print(f"{self.nombre} ha recibido datos de temperatura: {temperatura}°C en el momento {marca_temporal}")
-        except Exception as e:
-            print(f"Error en {self.nombre} al actualizar datos de temperatura:", e)
+class Sensor(Observable): 
+    def __init__(self, name):
+        super().__init__()
+        self.temperatura = 0
+        self.name = name
 
-
-# R3: cadena de responsabilidad
-class PasoCadenaResponsabilidad(ABC):
-    def __init__(self, sucesor=None):
-        self.sucesor = sucesor
-    
-    @abstractmethod
-    def manejar(self, datos):
-        pass
-
-class ComprobarUmbral(PasoCadenaResponsabilidad):
-    def __init__(self, umbral, sucesor=None):
-        super().__init__(sucesor)
-        self.umbral = umbral
-
-    def manejar(self, datos):
-        # temperatura actual
-        temperatura_actual = datos[-1][1]
-        if temperatura_actual > self.umbral:
-            print(f"Alerta: La temperatura actual está por encima del umbral de {self.umbral}°C")
-
-        # llamar al siguiente paso en la cadena de responsabilidad
-        if self.sucesor:
-            self.sucesor.manejar(datos)
-
-class ComprobarAumentoTemperatura(PasoCadenaResponsabilidad):
-    def __init__(self, sucesor=None):
-        super().__init__(sucesor)
-        self.alerta_disparada = False  # Controlar si la alerta ya se ha disparado
-
-    def manejar(self, datos):
-        # datos de los ultimos 30 segundos
-        datos_recientes = [x for x in datos if datos[-1][0] - x[0] <= 30]
-
-        if len(datos_recientes) > 0:
-            max_temp = max(datos_recientes, key=lambda x: x[1])[1]
-            min_temp = min(datos_recientes, key=lambda x: x[1])[1]
-
-            # verificar si la temperatura ha aumentado mas de 10 grados
-            if max_temp - min_temp > 10:
-                if not self.alerta_disparada:
-                    print("Alerta: La temperatura ha aumentado más de 10 grados en los últimos 30 segundos")
-                    self.alerta_disparada = True
-            else:
-                self.alerta_disparada = False
-
-        # llamar al siguiente paso en la cadena de responsabilidad
-        if self.sucesor:
-            self.sucesor.manejar(datos)
-
-class CalcularEstadisticos(PasoCadenaResponsabilidad):
-    def manejar(self, datos, estrategia):
-
-        # filtra las temperaturas de los ultimos 60 segundos
-        datos_recientes = [x for x in datos if datos[0][0] - x[0] <= 60]
-        
-        contexto = ContextoEstadisticas()
-
-        contexto.establecer_estrategia(estrategia)
-        contexto.ejecutar_estrategia(datos_recientes)
-
-        # llamar al siguiente paso en la cadena de responsabilidad
-        if self.sucesor:
-            self.sucesor.manejar(datos)
-
-# Creando la cadena de responsabilidad
-def crear_cadena_responsabilidad(umbral):
-    paso3 = ComprobarAumentoTemperatura()
-    paso2 = ComprobarUmbral(umbral, sucesor=paso3)
-    paso1 = CalcularEstadisticos(sucesor=paso2)
-
-    return paso1
+    def establecer_temp(self, temperatura):
+        if not isinstance(temperatura[1],int) :
+            print("La temperatura debe ser un número entero.")
+            raise ErrorEnTemperatura
+        self.temperatura = temperatura
+        self.notificacion(self.temperatura)
 
 
-# R4: estrategias
-class EstrategiaEstadisticas(ABC):
-    @abstractmethod
-    def calcular_estadisticas(self, datos):
-        pass
 
-# media y desviación típica
-class EstrategiaMediaDesviacionEstandar(EstrategiaEstadisticas):
-    def calcular_estadisticas(self, datos):
-        try:
-            if datos:
-                temperaturas = list(map(lambda x: x[1], datos))
-                media = sum(temperaturas) / len(temperaturas)
-                desviacion_tipica = np.std(temperaturas)
-                print(f"Media: {media:.2f}, Desviación Típica: {desviacion_tipica:.2f}")
-        except Exception as e:
-            print("Error en EstrategiaMediaDesviacionEstandar:", e)
+class Sistema(Observer):    
+    _unicaInstancia = None
 
-# cuantiles
-class EstrategiaCuantiles(EstrategiaEstadisticas):
-    def calcular_estadisticas(self, datos):
-        try:
-            if datos:
-                temperaturas = list(map(lambda x: x[1], datos))
-                q1 = np.percentile(temperaturas, 25)
-                q3 = np.percentile(temperaturas, 75)
-                print(f"Cuantiles 25 y 75: {q1:.2f}, {q3:.2f}")
-        except Exception as e:
-            print("Error en EstrategiaCuantiles:", e)
-
-# maximo y minimo
-class EstrategiaMaxMin(EstrategiaEstadisticas):
-    def calcular_estadisticas(self, datos):
-        try:
-            if datos:
-                temperaturas = list(map(lambda x: x[1], datos))
-                maximo = max(temperaturas)
-                minimo = min(temperaturas)
-                print(f"Máximo: {maximo:.2f}, Mínimo: {minimo:.2f}")
-        except Exception as e:
-            print("Error en EstrategiaMaxMin:", e)
-
-# clase ContextoEstadisticas
-class ContextoEstadisticas:
     def __init__(self):
-        self.estrategia_actual = None
+        self._name = "Sistema_funcional" 
+        self._estrategia=None
 
-    def establecer_estrategia(self, estrategia):
-        self.estrategia_actual = estrategia
+    @classmethod
+    def obtener_instancia(cls) :
+        if not cls._unicaInstancia :
+            cls._unicaInstancia = cls()
+        return cls._unicaInstancia
+    
+    def actualizar(self, temperatura): 
+        print ("Timestamp: {}, Temp: {}".format(temperatura[0],temperatura[1]))
+        stats = Estadísticos()   
+        stats.establecer_estrategia(self._estrategia)  
+        umbral = UmbralTemperatura(stats)
+        subida = AumentoTemperatura(umbral)
+        t = temperatura[1]
+        subida.handle_request(t)
 
-    def ejecutar_estrategia(self, datos):
-        if self.estrategia_actual:
-            self.estrategia_actual.calcular_estadisticas(datos)
-        else:
-            print("No se ha establecido una estrategia")
+    def establecer_estrategia(self,estrategia) :
+        if (isinstance(estrategia,Estrategia1)) or (isinstance(estrategia,Estrategia2)) or (isinstance(estrategia,Estrategia3)) :
+            self._estrategia = estrategia
+        else :
+            print("La estrategia elegida no consta.")
+            raise ErrorEstrategia
+        
 
 
-def main():
-    system = SistemaIoT()
 
-    contexto = ContextoEstadisticas()
 
-    # cambiar entre EstrategiaMaxMin, EstrategiaCuantiles y EstrategiaMediaDesviacionEstandar
-    estrategia = EstrategiaMediaDesviacionEstandar()
-    contexto.establecer_estrategia(estrategia)
+# PATRÓN STRATEGY:
+class Estrategia(ABC) :
+    def algoritmo(self,T) :
+        pass
 
-    umbral = 35  
-    cadena_responsabilidad = crear_cadena_responsabilidad(umbral)
 
-    try:
-        while True:
-            marca_temporal = int(time.time())
-            temperatura = random.uniform(20, 40)
 
-            system.recibir_temperatura(marca_temporal, temperatura)
+class Estrategia1(Estrategia):
+    def algoritmo(self, T):
+        media = np.mean(T)
+        desviacion_tipica = np.std(T)
+        print(f"\n\tCálculo de la media y desviación típica: \n\t|\tMedia: {round(media, 2)}\n\t|\tDesviación típica: {round(desviacion_tipica, 2)}\n")
 
-            datos_temperatura = system.datos_temperatura[-60:]  # ultimos 60 segundos
-            cadena_responsabilidad.manejar(datos_temperatura, estrategia)
 
-            time.sleep(5)
-    except KeyboardInterrupt:
-        print("\nFinalizando el programa...")
 
-if __name__ == "__main__":
-    main()
+
+class Estrategia2(Estrategia):
+    def algoritmo(self, T):
+        print("\tCómputo de cuantiles:\n")
+        cuartiles = np.percentile(T, [25, 50, 75])
+        cuartil1, cuartil2, cuartil3 = cuartiles
+        print(f"\t\tCuartiles: {cuartil1}, {cuartil2}, {cuartil3}\n")
+
+
+
+class Estrategia3(Estrategia):
+    def algoritmo(self, T):
+        maximo = max(T)
+        minimo = min(T)
+        print(f"\n\tValores máximos y mínimos en un periodo de 60 segundos: máximo:{maximo}, mínimo:{minimo}\n")
+
+
+
+
+
+#CHAIN OF RESPONSABILITY
+class Manejador(ABC) : 
+    def __init__(self,sucesor=None) :
+        self.sucesor = sucesor
+
+    def handle_request(self,temperatura) :
+        pass
+
+
+
+class Estadísticos(Manejador) :    
+    def __init__(self,sucesor=None,estrategia=None,temperaturas_stats=[]) :
+        super().__init__(sucesor)
+        self.estrategia = estrategia
+        self.temperaturas_stats = temperaturas_stats
+
+    def establecer_estrategia(self,estrategia_concreta) :
+        self.estrategia = estrategia_concreta  
+
+    def handle_request(self,temperatura) :
+        self.temperaturas_stats.append(temperatura)
+        if len(self.temperaturas_stats) == 12:
+            print(f"Cálculos de interés de las temperaturas registradas en el último minuto: ")
+            self.estrategia.algoritmo(self.temperaturas_stats)
+            self.temperaturas_stats.clear() 
+
+        #Ahora pasamos al siguiente de la cadena:
+        if self.sucesor :
+            self.sucesor.handle_request(temperatura)
+
+
+class UmbralTemperatura(Manejador) :
+    def __init__(self,sucesor=None,temperaturas_umbral = []) :
+        super().__init__(sucesor)
+        self.temperaturas_umbral = temperaturas_umbral
+
+    def handle_request(self,temperatura) : 
+        self.temperaturas_umbral.append(temperatura)
+
+        if temperatura > 33 :
+            print("Temperatura actual por encima de 33ºC") 
+
+        if self.sucesor :
+            self.sucesor.handle_request(temperatura)
+
+
+class AumentoTemperatura(Manejador) :
+    def __init__(self,sucesor=None,temperaturas_aumento = []) :
+        super().__init__(sucesor)
+        self.temperaturas_aumento = temperaturas_aumento
+
+    def handle_request(self,temperatura) :
+        self.temperaturas_aumento.append(temperatura)
+        if len(self.temperaturas_aumento) == 6:
+            sub = list(filter(lambda x: x>10,self.temperaturas_aumento))
+            if len(sub) > 0 :
+                print("La temperatura ha aumentado más de 10 grados en los últimos 30 segundos.")
+            self.temperaturas_aumento.clear() 
+        if self.sucesor :
+            self.sucesor.handle_request(temperatura)
+
+
+
+
+
+
+
+
+if __name__ == "__main__" :
+    
+    Sistema1 = Sistema.obtener_instancia()
+    Sensor1 = Sensor("Temperatura")
+    Sensor1.registro(Sistema1)
+    estrategia1 = Estrategia1()    #instanciamos la estrategia que queramos
+    Sistema1.establecer_estrategia(estrategia1)
+    cont = 0
+    while True :
+        #ALGUNOS ERRORES:
+        if cont == 1 :
+            try :
+                t = "NO SOY TEMPERATURA"
+                Sensor1.establecer_temp(t)
+            except Exception as e :
+                print("Excepción recibida.")   #INFORMAMOS ÚNICAMENTE DE LAS EXCEPCIONES CAPTURADAS
+
+        elif cont == 3 :
+            try :
+                estrategia_falsa = "NO SOY ESTRATEGIA"
+                Sistema1.establecer_estrategia(estrategia_falsa)
+            except Exception as e:
+                print("Excepción recibida.")
+
+        elif cont == 5 :
+            try :
+                s = "NO SOY SISTEMA"
+                Sensor1.registro(s)
+            except Exception as e:
+                print("Excepción recibida.")
+
+        elif cont == 7 :
+            try:
+                Sensor1.borrado('NO ESTOY REGISTRADO')
+            except Exception as e:
+                print("Excepción recibida.")
+
+        #CAMBIOS DE ESTRATEGIA DE MANERA AUTOMÁTICA :
+        elif cont == 15 :
+            estrategia2 = Estrategia2()
+            Sistema1.establecer_estrategia(estrategia2)
+
+        elif cont == 25 :
+            estrategia3 = Estrategia3()
+            Sistema1.establecer_estrategia(estrategia3)
+
+        t = random.randrange(0, 50)
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        temp_nueva = [timestamp, t]
+        Sensor1.establecer_temp(temp_nueva)
+        cont+= 1
+        time.sleep(5)
+
+
+
+
+
