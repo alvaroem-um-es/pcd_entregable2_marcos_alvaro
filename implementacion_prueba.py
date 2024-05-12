@@ -174,7 +174,7 @@ class Estadísticos(Manejador) :
             self.estrategia.algoritmo(self.temperaturas_stats)
             self.temperaturas_stats.clear() 
 
-        #Ahora pasamos al siguiente de la cadena:
+        #Pasamos al siguiente a través de lo heredado de la interfaz de Manejador:
         if self.sucesor :
             self.sucesor.solicitud(temperatura)
 
@@ -190,6 +190,7 @@ class UmbralTemperatura(Manejador) :
         if temperatura > 33 :
             print("Temperatura actual por encima de 33ºC") 
 
+        #Pasamos al siguiente a través de lo heredado de la interfaz de Manejador:
         if self.sucesor :
             self.sucesor.solicitud(temperatura)
 
@@ -206,26 +207,28 @@ class AumentoTemperatura(Manejador) :
             if len(sub) > 0 :
                 print("La temperatura ha aumentado más de 10 grados en los últimos 30 segundos.")
             self.temperaturas_aumento.clear() 
+        
+        #Pasamos al siguiente a través de lo heredado de la interfaz de Manejador:
         if self.sucesor :
             self.sucesor.solicitud(temperatura)
 
 
 
 
+# -------------------------------------------------------------- #
 
+#### INSTANCIAMIENTO DE LAS CLASES Y COMPROBACIÓN DE ERRORES ####
 
 
 if __name__ == "__main__":
-    # Creamos un sensor
+
     sensor = Sensor("Sensor 1")
     
-    # Creamos un sistema
     sistema = Sistema.obtener_instancia()
 
     # Registro del sistema como observador del sensor
     sensor.registro(sistema)
 
-    # Definimos una estrategia para el sistema
     estrategia = Estrategia1()
 
     # Establecemos la estrategia en el sistema
@@ -235,7 +238,7 @@ if __name__ == "__main__":
     for _ in range(60):
         temperatura = (time.strftime("%H:%M:%S"), random.randint(20, 40))
         sensor.establecer_temp(temperatura)
-        time.sleep(1)  # Simulamos un intervalo de tiempo entre las lecturas
+        time.sleep(2)  
 
     # Prueba de error: Intentamos establecer una estrategia no válida en el sistema
     try:
@@ -245,7 +248,7 @@ if __name__ == "__main__":
 
     # Prueba de error: Establecemos una temperatura no válida en el sensor
     try:
-        sensor.establecer_temp(("10:00:00", "30"))  # La temperatura debe ser un número entero
+        sensor.establecer_temp(("10:00:00", "30")) 
     except ErrorTemperatura:
         print("Error: La temperatura debe ser un número entero.")
 
