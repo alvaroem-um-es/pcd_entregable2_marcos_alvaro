@@ -215,60 +215,39 @@ class AumentoTemperatura(Manejador) :
 
 
 
-
-if __name__ == "__main__" :
+if __name__ == "__main__":
+    # Creamos un sensor
+    sensor = Sensor("Sensor 1")
     
-    Sistema = Sistema.obtener_instancia()
-    Sensor1 = Sensor("Temperatura")
-    Sensor1.registro(Sistema)
-    estrategia1 = Estrategia1()    #instanciamos la estrategia que queramos
-    Sistema.establecer_estrategia(estrategia1)
-    cont = 0
-    while True :
-        #ALGUNOS ERRORES:
-        if cont == 1 :
-            try :
-                t = "NO SOY TEMPERATURA."
-                Sensor1.establecer_temp(t)
-            except Exception as e :
-                print("Excepción recibida.")   #INFORMAMOS ÚNICAMENTE DE LAS EXCEPCIONES CAPTURADAS
+    # Creamos un sistema
+    sistema = Sistema.obtener_instancia()
 
-        elif cont == 3 :
-            try :
-                estrategia_falsa = "NO SOY ESTRATEGIA"
-                Sistema.establecer_estrategia(estrategia_falsa)
-            except Exception as e:
-                print("Excepción recibida.")
+    # Registro del sistema como observador del sensor
+    sensor.registro(sistema)
 
-        elif cont == 5 :
-            try :
-                s = "NO SOY SISTEMA"
-                Sensor1.registro(s)
-            except Exception as e:
-                print("Excepción recibida.")
+    # Definimos una estrategia para el sistema
+    estrategia = Estrategia1()
 
-        elif cont == 7 :
-            try:
-                Sensor1.borrado('NO ESTOY REGISTRADO')
-            except Exception as e:
-                print("Excepción recibida.")
+    # Establecemos la estrategia en el sistema
+    sistema.establecer_estrategia(estrategia)
 
-        #CAMBIOS DE ESTRATEGIA DE MANERA AUTOMÁTICA :
-        elif cont == 15 :
-            estrategia2 = Estrategia2()
-            Sistema.establecer_estrategia(estrategia2)
+    # Simulamos la generación de datos del sensor y su procesamiento por el sistema
+    for _ in range(60):
+        temperatura = (time.strftime("%H:%M:%S"), random.randint(20, 40))
+        sensor.establecer_temp(temperatura)
+        time.sleep(1)  # Simulamos un intervalo de tiempo entre las lecturas
 
-        elif cont == 25 :
-            estrategia3 = Estrategia3()
-            Sistema.establecer_estrategia(estrategia3)
+    # Prueba de error: Intentamos establecer una estrategia no válida en el sistema
+    try:
+        sistema.establecer_estrategia("Estrategia No Válida")
+    except ErrorEstrategia:
+        print("Error: La estrategia elegida no es válida.")
 
-        t = random.randrange(0, 50)
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        temp_nueva = [timestamp, t]
-        Sensor1.establecer_temp(temp_nueva)
-        cont+= 1
-        time.sleep(5)
-
+    # Prueba de error: Establecemos una temperatura no válida en el sensor
+    try:
+        sensor.establecer_temp(("10:00:00", "30"))  # La temperatura debe ser un número entero
+    except ErrorTemperatura:
+        print("Error: La temperatura debe ser un número entero.")
 
 
 
