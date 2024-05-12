@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 import time
 import random
 import functools
+from functools import reduce
 import numpy as np
 
 
@@ -186,11 +187,13 @@ class Estrategia2(Estrategia):
 
 
 
+
 class Estrategia3(Estrategia):
     def algoritmo(self, T):
-        maximo = max(T)
-        minimo = min(T)
+        maximo = reduce(lambda a, b: a if a > b else b, T)
+        minimo = reduce(lambda a, b: a if a < b else b, T)
         print(f"\n\tValores máximos y mínimos en un periodo de 60 segundos: máximo:{maximo}, mínimo:{minimo}\n")
+
 
 
 
