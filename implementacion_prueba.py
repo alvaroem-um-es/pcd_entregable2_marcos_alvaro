@@ -1,7 +1,7 @@
 # -------------------------------------------------------------- #
 #  Copyright (c) UMU Corporation. All rights reserved.
 # ######################## PROGRAMACIÓN FUNCIONAL, OBJETOS Y PATRONES DE DISEÑO ####################### #
-# ########################  ENTREGABLE 1  ####################### #
+# ########################  ENTREGABLE 2  ####################### #
 
 
 #### IMPLEMENTACIÓN CÓDIGO PARA ENTORNO IoT SENSOR DE TEMPERATURA EN INVERNADERO ####
@@ -44,18 +44,36 @@ class Observable:
         self._observers = []
 
     def registro(self, observer):
+
+        """
+        Este método se utiliza para registrar un nuevo 
+        observador en la lista de observadores.
+        """
+        
         if not isinstance(observer,Observer) :
             print("Sistema no es observador.")
             raise ErrorObservador
         self._observers.append(observer)
 
     def borrado(self, element):
+
+        """
+         Este método se utiliza para eliminar un 
+         observador de la lista de observadores. 
+        """
+
         if element not in self._observers :
             print("Observador no registrado.")
             raise ErrorObservador
         self._observers.remove(element)
 
     def notificacion(self, temperatura):
+
+        """
+         Este método se utiliza para notificar a todos los observadores
+         registrados cuando se produce un evento de interés.
+        """
+
         for element in self._observers:
             element.actualizar(temperatura)
 
@@ -66,6 +84,16 @@ class Observer(ABC):
 
 
 class Sensor(Observable): 
+
+    """
+     Es una clase que hereda de Observable, lo que significa que es capaz de notificar 
+     a otros objetos (observadores) sobre cambios en la temperatura. 
+     Tiene un método establecer_temp(self, temperatura) que se utiliza para establecer 
+     la temperatura actual del sensor. 
+    
+    """
+
+
     def __init__(self, name):
         super().__init__()
         self.temperatura = 0
@@ -80,31 +108,44 @@ class Sensor(Observable):
 
 
 
-class Sistema(Observer):    
-    _unicaInstancia = None
+class Sistema(Observer):
+
+    """
+     Es una clase que actúa como un observador. Implementa el método 
+     actualizar(self, temperatura) definido en la clase Observer. Cuando se llama 
+     a este método, imprime el tiempo y la temperatura recibida como argumento.
+     Si se ha establecido una estrategia, crea instancias de Estadísticos, 
+     UmbralTemperatura y AumentoTemperatura'
+    """
+
+    SingleInstance = None
 
     def __init__(self):
         self._name = "Sistema_funcional" 
         self._estrategia=None
 
     @classmethod
-    def obtener_instancia(cls) :
-        if not cls._unicaInstancia :
-            cls._unicaInstancia = cls()
-        return cls._unicaInstancia
+    def get_instancia(cls) :
+        if not cls.SingleInstance :
+            cls.SingleInstance = cls()
+        return cls.SingleInstance
     
     def actualizar(self, temperatura): 
         print ("Timestamp: {}, Temp: {}".format(temperatura[0],temperatura[1]))
-        stats = Estadísticos()   
-        stats.establecer_estrategia(self._estrategia)  
-        umbral = UmbralTemperatura(stats)
-        subida = AumentoTemperatura(umbral)
-        t = temperatura[1]
-        subida.solicitud(t)
+        if self._estrategia is not None:
+            stats = Estadísticos()   
+            stats.establecer_estrategia(self._estrategia)  
+            umbral = UmbralTemperatura(stats)
+            subida = AumentoTemperatura(umbral)
+            t = temperatura[1]
+            subida.solicitud(t)
+        else:
+            print("Error: No se ha establecido ninguna estrategia en el sistema.")
+
 
     def establecer_estrategia(self,estrategia) :
         if (isinstance(estrategia,Estrategia1)) or (isinstance(estrategia,Estrategia2)) or (isinstance(estrategia,Estrategia3)) :
-            self._estrategia = estrategia
+            self._estrategia  = estrategia
         else :
             print("La estrategia elegida no consta.")
             raise ErrorEstrategia
@@ -115,6 +156,13 @@ class Sistema(Observer):
 
 # PATRÓN STRATEGY:
 class Estrategia(ABC) :
+
+    """
+    El patrón Strategy se utiliza para definir diferentes estrategias 
+    de cálculo de estadísticas sobre un conjunto de datos de temperatura.
+
+    """
+
     def algoritmo(self,T) :
         pass
 
@@ -150,6 +198,15 @@ class Estrategia3(Estrategia):
 
 #CHAIN OF RESPONSABILITY
 class Manejador(ABC) : 
+
+    """
+    Esta clase define la interfaz común para todos los manejadores en la cadena.
+    El constructor toma un parámetro sucesor, que representa el próximo manejador en la cadena.
+    El método solicitud es el método clave que maneja una solicitud (en este caso, la temperatura). 
+    La implementación predeterminada en esta clase base no realiza ninguna acción y debe ser sobrescrita por las subclases.
+
+    """
+
     def __init__(self,sucesor=None) :
         self.sucesor = sucesor
 
@@ -224,7 +281,7 @@ if __name__ == "__main__":
 
     sensor = Sensor("Sensor 1")
     
-    sistema = Sistema.obtener_instancia()
+    sistema = Sistema.get_instancia()
 
     # Registro del sistema como observador del sensor
     sensor.registro(sistema)
@@ -238,7 +295,7 @@ if __name__ == "__main__":
     for _ in range(60):
         temperatura = (time.strftime("%H:%M:%S"), random.randint(20, 40))
         sensor.establecer_temp(temperatura)
-        time.sleep(2)  
+        time.sleep(5)  
 
     # Prueba de error: Intentamos establecer una estrategia no válida en el sistema
     try:
