@@ -1,6 +1,6 @@
 # -------------------------------------------------------------- #
 #  Copyright (c) UMU Corporation. All rights reserved.
-# ######################## PROGRAMACIÓN ORIENTADA A OBJETOS ####################### #
+# ######################## PROGRAMACIÓN FUNCIONAL, OBJETOS Y PATRONES DE DISEÑO ####################### #
 # ########################  ENTREGABLE 1  ####################### #
 
 
@@ -20,7 +20,7 @@ import numpy as np
 
 
 
-class ErrorEnTemperatura(Exception):
+class ErrorTemperatura(Exception):
     pass
 
 class ErrorObservador(Exception):
@@ -74,7 +74,7 @@ class Sensor(Observable):
     def establecer_temp(self, temperatura):
         if not isinstance(temperatura[1],int) :
             print("La temperatura debe ser un número entero.")
-            raise ErrorEnTemperatura
+            raise ErrorTemperatura
         self.temperatura = temperatura
         self.notificacion(self.temperatura)
 
@@ -100,7 +100,7 @@ class Sistema(Observer):
         umbral = UmbralTemperatura(stats)
         subida = AumentoTemperatura(umbral)
         t = temperatura[1]
-        subida.handle_request(t)
+        subida.solicitud(t)
 
     def establecer_estrategia(self,estrategia) :
         if (isinstance(estrategia,Estrategia1)) or (isinstance(estrategia,Estrategia2)) or (isinstance(estrategia,Estrategia3)) :
@@ -153,7 +153,7 @@ class Manejador(ABC) :
     def __init__(self,sucesor=None) :
         self.sucesor = sucesor
 
-    def handle_request(self,temperatura) :
+    def solicitud(self,temperatura) :
         pass
 
 
@@ -167,7 +167,7 @@ class Estadísticos(Manejador) :
     def establecer_estrategia(self,estrategia_concreta) :
         self.estrategia = estrategia_concreta  
 
-    def handle_request(self,temperatura) :
+    def solicitud(self,temperatura) :
         self.temperaturas_stats.append(temperatura)
         if len(self.temperaturas_stats) == 12:
             print(f"Cálculos de interés de las temperaturas registradas en el último minuto: ")
@@ -176,7 +176,7 @@ class Estadísticos(Manejador) :
 
         #Ahora pasamos al siguiente de la cadena:
         if self.sucesor :
-            self.sucesor.handle_request(temperatura)
+            self.sucesor.solicitud(temperatura)
 
 
 class UmbralTemperatura(Manejador) :
@@ -184,14 +184,14 @@ class UmbralTemperatura(Manejador) :
         super().__init__(sucesor)
         self.temperaturas_umbral = temperaturas_umbral
 
-    def handle_request(self,temperatura) : 
+    def solicitud(self,temperatura) : 
         self.temperaturas_umbral.append(temperatura)
 
         if temperatura > 33 :
             print("Temperatura actual por encima de 33ºC") 
 
         if self.sucesor :
-            self.sucesor.handle_request(temperatura)
+            self.sucesor.solicitud(temperatura)
 
 
 class AumentoTemperatura(Manejador) :
@@ -199,7 +199,7 @@ class AumentoTemperatura(Manejador) :
         super().__init__(sucesor)
         self.temperaturas_aumento = temperaturas_aumento
 
-    def handle_request(self,temperatura) :
+    def solicitud(self,temperatura) :
         self.temperaturas_aumento.append(temperatura)
         if len(self.temperaturas_aumento) == 6:
             sub = list(filter(lambda x: x>10,self.temperaturas_aumento))
@@ -207,7 +207,7 @@ class AumentoTemperatura(Manejador) :
                 print("La temperatura ha aumentado más de 10 grados en los últimos 30 segundos.")
             self.temperaturas_aumento.clear() 
         if self.sucesor :
-            self.sucesor.handle_request(temperatura)
+            self.sucesor.solicitud(temperatura)
 
 
 
@@ -218,11 +218,11 @@ class AumentoTemperatura(Manejador) :
 
 if __name__ == "__main__" :
     
-    Sistema1 = Sistema.obtener_instancia()
+    Sistema = Sistema.obtener_instancia()
     Sensor1 = Sensor("Temperatura")
-    Sensor1.registro(Sistema1)
+    Sensor1.registro(Sistema)
     estrategia1 = Estrategia1()    #instanciamos la estrategia que queramos
-    Sistema1.establecer_estrategia(estrategia1)
+    Sistema.establecer_estrategia(estrategia1)
     cont = 0
     while True :
         #ALGUNOS ERRORES:
@@ -236,7 +236,7 @@ if __name__ == "__main__" :
         elif cont == 3 :
             try :
                 estrategia_falsa = "NO SOY ESTRATEGIA"
-                Sistema1.establecer_estrategia(estrategia_falsa)
+                Sistema.establecer_estrategia(estrategia_falsa)
             except Exception as e:
                 print("Excepción recibida.")
 
@@ -256,11 +256,11 @@ if __name__ == "__main__" :
         #CAMBIOS DE ESTRATEGIA DE MANERA AUTOMÁTICA :
         elif cont == 15 :
             estrategia2 = Estrategia2()
-            Sistema1.establecer_estrategia(estrategia2)
+            Sistema.establecer_estrategia(estrategia2)
 
         elif cont == 25 :
             estrategia3 = Estrategia3()
-            Sistema1.establecer_estrategia(estrategia3)
+            Sistema.establecer_estrategia(estrategia3)
 
         t = random.randrange(0, 50)
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
