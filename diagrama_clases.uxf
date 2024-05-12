@@ -1,0 +1,80 @@
+<diagram program="umletino" version="15.1"><zoom_level>8</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLClass</id><coordinates><x>296</x><y>96</y><w>352</w><h>88</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt;
+Manejador
+--
++ sucesor:&lt;Estadísticos&gt;/&lt;UmbralTemperatura&gt;/&lt;AumentoTemperatura&gt;
+--
++ solicitud (temperatura:int)
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>72</x><y>280</y><w>256</w><h>96</h></coordinates><panel_attributes>Estadísticos
+--
++ estrategia:&lt;Estrategia1&gt;/&lt;Estrategia2&gt;/&lt;Estrategia3&gt;
++ temperaturas_stats list int
+--
++ establecer_estrategia (estrategia_concreta:
+&lt;Estrategia1&gt;/&lt;Estrategia2&gt;/&lt;Estrategia3&gt;)
++ solicitud (temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>456</x><y>176</y><w>24</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>Relation</id><coordinates><x>288</x><y>224</y><w>192</w><h>72</h></coordinates><panel_attributes>lt=-
+m1=
+m2=
+</panel_attributes><additional_attributes>90;50;220;10;10;70</additional_attributes></element><element><id>UMLClass</id><coordinates><x>376</x><y>280</y><w>256</w><h>96</h></coordinates><panel_attributes>UmbralTemperatura
+--
++ temperaturas_umbral:list int
+--
++ solicitud (temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>456</x><y>224</y><w>48</w><h>72</h></coordinates><panel_attributes>lt=-
+m1=
+m2=
+</panel_attributes><additional_attributes>30;50;10;10;40;70</additional_attributes></element><element><id>UMLClass</id><coordinates><x>680</x><y>280</y><w>256</w><h>96</h></coordinates><panel_attributes>AumentoTemperatura
+--
++ temperaturas_aumento:list int
+--
++ solicitud (temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>456</x><y>216</y><w>368</w><h>80</h></coordinates><panel_attributes>lt=-
+m1=
+m2=
+</panel_attributes><additional_attributes>390;70;10;20;440;80</additional_attributes></element><element><id>UMLClass</id><coordinates><x>392</x><y>440</y><w>200</w><h>88</h></coordinates><panel_attributes>Observable
+--
+- observers = list &lt;Observer&gt;
+--
++ registro (observer:Observer)
++ borrado (observer:Observer)
++ notificacion (temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>688</x><y>448</y><w>176</w><h>72</h></coordinates><panel_attributes>Sensor
+--
++ temperatura : int
++ nombre : str
+--
++ establecer_temp(temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>584</x><y>480</y><w>120</w><h>24</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;130;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>176</x><y>448</y><w>144</w><h>72</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt;
+/Observer/
+--
+
+--
++ actualizar (temperatura:int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>312</x><y>480</y><w>96</w><h>24</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes><additional_attributes>100;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>144</x><y>584</y><w>216</w><h>120</h></coordinates><panel_attributes>Sistema
+--
+- SingleInstance: Sistema
+--
+- name: str
+- estrategia:None
+--
++ get_instancia (): &lt;Sistema&gt;
++ actualizar (temperatura:int)
++ establecer_estrategia (estrategia:
+Estrategia1/Estrategia2/Estrategia3)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>248</x><y>512</y><w>24</w><h>88</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;90</additional_attributes></element><element><id>UMLClass</id><coordinates><x>448</x><y>600</y><w>136</w><h>64</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt;
+/Estrategia/
+--
+
+--
++ aplicarAlgoritmo(T:list int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>352</x><y>624</y><w>120</w><h>32</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes><additional_attributes>10;20;123;16;120;10</additional_attributes></element><element><id>Relation</id><coordinates><x>504</x><y>656</y><w>24</w><h>88</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;90</additional_attributes></element><element><id>UMLClass</id><coordinates><x>368</x><y>752</y><w>104</w><h>56</h></coordinates><panel_attributes>Estrategia1
+--
+
+--
++ algoritmo(T:list int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>408</x><y>720</y><w>120</w><h>48</h></coordinates><panel_attributes>lt=-
+m1=
+m2=</panel_attributes><additional_attributes>10;40;130;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>512</x><y>752</y><w>104</w><h>56</h></coordinates><panel_attributes>Estrategia2
+--
+
+--
++ algoritmo(T:list int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>504</x><y>720</y><w>80</w><h>48</h></coordinates><panel_attributes>lt=-
+m1=
+m2=</panel_attributes><additional_attributes>80;40;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>648</x><y>752</y><w>104</w><h>56</h></coordinates><panel_attributes>Estrategia3
+--
+
+--
++ algoritmo(T:list int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>504</x><y>720</y><w>200</w><h>48</h></coordinates><panel_attributes>lt=-
+m1=
+m2=</panel_attributes><additional_attributes>230;40;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>576</x><y>136</y><w>496</w><h>544</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes><additional_attributes>90;10;570;10;600;390;333;656;10;630</additional_attributes></element></diagram>
