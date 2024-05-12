@@ -228,7 +228,7 @@ if __name__ == "__main__" :
         #ALGUNOS ERRORES:
         if cont == 1 :
             try :
-                t = "NO SOY TEMPERATURA"
+                t = "NO SOY TEMPERATURA."
                 Sensor1.establecer_temp(t)
             except Exception as e :
                 print("Excepción recibida.")   #INFORMAMOS ÚNICAMENTE DE LAS EXCEPCIONES CAPTURADAS
